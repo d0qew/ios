@@ -46,12 +46,15 @@ struct ScanToUseAppView: View {
                     set: { if !$0 { viewModel.alert = nil } },
                 ),
                 actions: {
-                    Button("scan_enter_error_alert_button_okay", role: .cancel) {
-                        viewModel.resetState()
-                    }
+                    Button(
+                        LocalizedStringResource("scan_enter_error_alert_button_okay"),
+                        role: .cancel,
+                    ) { viewModel.resetState() }
                 },
                 message: {
-                    Text(viewModel.alert?.message ?? String(localized: "error_base_message"))
+                    if let message = viewModel.alert?.message {
+                        Text(message)
+                    }
                 },
             )
             .sheet(isPresented: $viewModel.isScannerPresented) {
@@ -70,7 +73,9 @@ struct ScanToUseAppView: View {
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
                         viewModel.handlePickedImageData(data)
                     } else {
-                        viewModel.alert = .photoInvalidImage
+                        viewModel.alert = .photoInvalidImage(
+                            title: "scan_enter_error_alert_title_default",
+                        )
                     }
                 }
             }
@@ -80,78 +85,25 @@ struct ScanToUseAppView: View {
     private var content: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Image(systemName: "qrcode.viewfinder")
-                    .font(.system(size: 56))
+                qrCodeImage
                     .padding(.bottom, 8)
 
-                Text("scan_enter_info_title")
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
+                infoTitle
                     .padding(.horizontal, 16)
 
-
-                Text("scan_enter_info_subtitle")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                infoSubtitle
                     .padding(.horizontal, 16)
 
                 Spacer(minLength: 40)
 
-                HStack {
-                    Image(systemName: "link")
-                        .foregroundStyle(.secondary)
+                inviteLinkTextField
+                    .padding(.horizontal)
 
-                    TextField("invite_link", text: $viewModel.inviteLinkText)
-                        .focused($isLinkTextFieldFocused)
-                        .font(.body)
-                        .frame(maxWidth: .infinity)
-                        .keyboardType(.URL)
-                        .autocorrectionDisabled()
-                        .autocapitalization(.none)
-                        .onSubmit { viewModel.handleEnteredInviteLinkText() }
-                        .overlay(alignment: .trailing) {
-                            if viewModel.inviteLinkText.isEmpty {
-                                Button("paste") {
-                                    guard let text = UIPasteboard.general.string else {
-                                        return
-                                    }
-                                    viewModel.inviteLinkText = text
-                                    viewModel.handleEnteredInviteLinkText()
-                                }
-                                .padding(.trailing, 8)
-                            }
-                        }
-                        .onTapGesture { isLinkTextFieldFocused = true }
-                }
-                .padding()
-                .background(.regularMaterial, in: .rect(cornerRadius: 14))
-                .padding(.horizontal)
+                openScannerButton
+                    .padding(.horizontal)
 
-                Button {
-                    viewModel.openScanner()
-                } label: {
-                    Text("scan_enter_open_scanner")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                .keyboardShortcut(.defaultAction)
-                .buttonStyle(.glassProminent)
-                .padding(.horizontal)
-
-                PhotosPicker(
-                    selection: $pickedPhotoItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Text("scan_enter_open_photo_scanner")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                .buttonStyle(.glass)
-                .padding(.horizontal)
+                photosPicker
+                    .padding(.horizontal)
 
                 Spacer(minLength: 24)
             }
@@ -167,13 +119,93 @@ struct ScanToUseAppView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            Text("scanner_qrcode_navigation_title")
+            Text(LocalizedStringResource("scanner_qrcode_navigation_title"))
         }
         ToolbarItem(placement: .primaryAction) {
             Button(action: { dismiss() }) {
                 Image(systemName: "xmark")
             }
         }
+    }
+
+    private var qrCodeImage: some View {
+        Image(systemName: "qrcode.viewfinder")
+            .font(.system(size: 56))
+    }
+
+    private var infoTitle: some View {
+        Text(LocalizedStringResource("scan_enter_info_title"))
+            .font(.title3)
+            .multilineTextAlignment(.center)
+    }
+
+    private var infoSubtitle: some View {
+        Text(LocalizedStringResource("scan_enter_info_subtitle"))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+    }
+
+    private var inviteLinkTextField: some View {
+        HStack {
+            Image(systemName: "link")
+                .foregroundStyle(.secondary)
+
+            TextField(
+                LocalizedStringResource("invite_link"),
+                text: $viewModel.inviteLinkText,
+            )
+            .focused($isLinkTextFieldFocused)
+            .font(.body)
+            .frame(maxWidth: .infinity)
+            .keyboardType(.URL)
+            .autocorrectionDisabled()
+            .autocapitalization(.none)
+            .onSubmit { viewModel.handleEnteredInviteLinkText() }
+            .overlay(alignment: .trailing) {
+                if viewModel.inviteLinkText.isEmpty {
+                    Button(LocalizedStringResource("paste")) {
+                        guard let text = UIPasteboard.general.string else {
+                            return
+                        }
+                        viewModel.inviteLinkText = text
+                        viewModel.handleEnteredInviteLinkText()
+                    }
+                    .padding(.trailing, 8)
+                    .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+                }
+            }
+        }
+        .padding()
+        .background(.regularMaterial, in: .rect(cornerRadius: 14))
+    }
+
+    private var openScannerButton: some View {
+        Button(
+            action: { viewModel.openScanner() },
+            label: {
+                Text(LocalizedStringResource("scan_enter_open_scanner"))
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            },
+        )
+        .keyboardShortcut(.defaultAction)
+        .buttonStyle(.glassProminent)
+    }
+
+    private var photosPicker: some View {
+        PhotosPicker(
+            selection: $pickedPhotoItem,
+            matching: .images,
+            photoLibrary: .shared()
+        ) {
+            Text(LocalizedStringResource("scan_enter_open_photo_scanner"))
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+        }
+        .buttonStyle(.glass)
     }
 }
 

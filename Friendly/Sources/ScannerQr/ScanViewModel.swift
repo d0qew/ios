@@ -16,13 +16,8 @@ final class ScanToUseAppViewModel: ObservableObject {
     }
 
     struct Alert: Equatable {
-        let title: String
-        let message: String?
-
-        init(title: String, message: String? = nil) {
-            self.title = title
-            self.message = message
-        }
+        let title: LocalizedStringResource
+        let message: LocalizedStringResource
     }
 
     private enum InviteLinkInputSource {
@@ -109,19 +104,13 @@ extension ScanToUseAppViewModel {
         Task {
             guard let image = UIImage(data: data),
                   let cgImage = image.cgImage else {
-                alert = Alert(
-                    title: String(localized: "scan_enter_error_alert_title"),
-                    message: String(localized: "scan_enter_photo_invalid_image"),
-                )
+                alert = .photoInvalidImage(title: "scan_enter_error_alert_title")
                 return
             }
 
             let codes = cgImage.detectQRCodeStrings()
             guard let code = codes.first, !code.isEmpty else {
-                alert = Alert(
-                    title: String(localized: "scan_enter_error_alert_title"),
-                    message: String(localized: "scan_enter_photo_qr_not_found"),
-                )
+                alert = .photoQrNotFound
                 return
             }
 
@@ -131,43 +120,36 @@ extension ScanToUseAppViewModel {
     }
 }
 
-enum ScanEnterError: LocalizedError {
-    case invalidURL
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL:
-            return String(localized: "scan_enter_invalid_url")
-        }
-    }
-}
-
 extension ScanToUseAppViewModel.Alert {
     static var unknownError: Self {
         Self(
-            title: String(localized: "scan_enter_error_alert_title_default"),
-            message: String(localized: "scan_enter_error_alert_description_default"),
+            title: "scan_enter_error_alert_title_default",
+            message: "scan_enter_error_alert_description_default",
         )
     }
 
     static var invalidLinkFromQr: Self {
         Self(
-            title: String(localized: "invalid_link"),
-            message: String(localized: "scan_enter_invalid_link_from_qr"),
+            title: "invalid_link",
+            message: "scan_enter_invalid_link_from_qr",
         )
     }
 
     static var invalidLinkFromTextField: Self {
         Self(
-            title: String(localized: "invalid_link"),
-            message: String(localized: "scan_enter_invalid_link_from_text_field"),
+            title: "invalid_link",
+            message: "scan_enter_invalid_link_from_text_field",
         )
     }
-
-    static var photoInvalidImage: Self {
+    
+    static var photoQrNotFound: Self {
         Self(
-            title: String(localized: "scan_enter_error_alert_title_default"),
-            message: String(localized: "scan_enter_photo_invalid_image"),
+            title: "scan_enter_error_alert_title",
+            message: "scan_enter_photo_qr_not_found",
         )
-     }
+    }
+    
+    static func photoInvalidImage(title: LocalizedStringResource) -> Self {
+        Self(title: title, message: "scan_enter_photo_invalid_image")
+    }
  }
