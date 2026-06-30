@@ -13,6 +13,7 @@ struct ScanToUseAppView: View {
     @State private var pickedPhotoItem: PhotosPickerItem? = nil
     private var isBlocked: Bool
 
+    @FocusState private var isLinkTextFieldFocused: Bool
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
 
@@ -102,6 +103,7 @@ struct ScanToUseAppView: View {
                         .foregroundStyle(.secondary)
 
                     TextField("invite_link", text: $viewModel.inviteLinkText)
+                        .focused($isLinkTextFieldFocused)
                         .font(.body)
                         .frame(maxWidth: .infinity)
                         .keyboardType(.URL)
@@ -117,6 +119,7 @@ struct ScanToUseAppView: View {
                                 .padding(.trailing, 8)
                             }
                         }
+                        .onTapGesture { isLinkTextFieldFocused = true }
                 }
                 .padding()
                 .background(.regularMaterial, in: .rect(cornerRadius: 14))
@@ -150,6 +153,7 @@ struct ScanToUseAppView: View {
                 Spacer(minLength: 24)
             }
         }
+        .onTapGesture { isLinkTextFieldFocused = false }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
         .padding(.top)
