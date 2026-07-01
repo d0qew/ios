@@ -797,6 +797,23 @@
         }
       }
     },
+    "scan_enter_photo_invalid_image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected file couldn't be opened as an image. Please choose a different photo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбранный файл не удалось открыть в виде изображения. Пожалуйста, выберите другую фотографию."
+          }
+        }
+      }
+    },
     "scan_enter_photo_qr_not_found" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -831,6 +848,7 @@
       }
     },
     "scanner_qrcode_camera_permission_title" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -847,6 +865,7 @@
       }
     },
     "scanner_qrcode_navigation_title" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {

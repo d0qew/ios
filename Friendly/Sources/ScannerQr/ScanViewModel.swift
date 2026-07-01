@@ -104,7 +104,7 @@ extension ScanToUseAppViewModel {
         Task {
             guard let image = UIImage(data: data),
                   let cgImage = image.cgImage else {
-                alert = .photoInvalidImage(title: "scan_enter_error_alert_title")
+                alert = .photoInvalidImage(title: .scanEnterErrorAlertTitle)
                 return
             }
 
@@ -123,33 +123,33 @@ extension ScanToUseAppViewModel {
 extension ScanToUseAppViewModel.Alert {
     static var unknownError: Self {
         Self(
-            title: "scan_enter_error_alert_title_default",
-            message: "scan_enter_error_alert_description_default",
+            title: .scanEnterErrorAlertTitleDefault,
+            message: .scanEnterErrorAlertDescriptionDefault,
         )
     }
 
     static var invalidLinkFromQr: Self {
         Self(
-            title: "invalid_link",
-            message: "scan_enter_invalid_link_from_qr",
+            title: .invalidLink,
+            message: .scanEnterInvalidLinkFromQr,
         )
     }
 
     static var invalidLinkFromTextField: Self {
         Self(
-            title: "invalid_link",
-            message: "scan_enter_invalid_link_from_text_field",
+            title: .invalidLink,
+            message: .scanEnterInvalidLinkFromTextField,
         )
     }
     
     static var photoQrNotFound: Self {
         Self(
-            title: "scan_enter_error_alert_title",
-            message: "scan_enter_photo_qr_not_found",
+            title: .scanEnterErrorAlertTitle,
+            message: .scanEnterPhotoQrNotFound,
         )
     }
     
     static func photoInvalidImage(title: LocalizedStringResource) -> Self {
-        Self(title: title, message: "scan_enter_photo_invalid_image")
+        Self(title: title, message: .scanEnterPhotoInvalidImage)
     }
  }

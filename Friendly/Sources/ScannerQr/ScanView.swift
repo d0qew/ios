@@ -47,7 +47,7 @@ struct ScanToUseAppView: View {
                 ),
                 actions: {
                     Button(
-                        LocalizedStringResource("scan_enter_error_alert_button_okay"),
+                        .scanEnterErrorAlertButtonOkay,
                         role: .cancel,
                     ) { viewModel.resetState() }
                 },
@@ -74,7 +74,7 @@ struct ScanToUseAppView: View {
                         viewModel.handlePickedImageData(data)
                     } else {
                         viewModel.alert = .photoInvalidImage(
-                            title: "scan_enter_error_alert_title_default",
+                            title: .scanEnterErrorAlertTitleDefault,
                         )
                     }
                 }
@@ -119,7 +119,7 @@ struct ScanToUseAppView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            Text(LocalizedStringResource("scanner_qrcode_navigation_title"))
+            Text(.scannerQrcodeNavigationTitle)
         }
         ToolbarItem(placement: .primaryAction) {
             Button(action: { dismiss() }) {
@@ -134,13 +134,13 @@ struct ScanToUseAppView: View {
     }
 
     private var infoTitle: some View {
-        Text(LocalizedStringResource("scan_enter_info_title"))
+        Text(.scanEnterInfoTitle)
             .font(.title3)
             .multilineTextAlignment(.center)
     }
 
     private var infoSubtitle: some View {
-        Text(LocalizedStringResource("scan_enter_info_subtitle"))
+        Text(.scanEnterInfoSubtitle)
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -152,7 +152,7 @@ struct ScanToUseAppView: View {
                 .foregroundStyle(.secondary)
 
             TextField(
-                LocalizedStringResource("invite_link"),
+                .inviteLink,
                 text: $viewModel.inviteLinkText,
             )
             .focused($isLinkTextFieldFocused)
@@ -164,7 +164,7 @@ struct ScanToUseAppView: View {
             .onSubmit { viewModel.handleEnteredInviteLinkText() }
             .overlay(alignment: .trailing) {
                 if viewModel.inviteLinkText.isEmpty {
-                    Button(LocalizedStringResource("paste")) {
+                    Button(.paste) {
                         guard let text = UIPasteboard.general.string else {
                             return
                         }
@@ -184,7 +184,7 @@ struct ScanToUseAppView: View {
         Button(
             action: { viewModel.openScanner() },
             label: {
-                Text(LocalizedStringResource("scan_enter_open_scanner"))
+                Text(.scanEnterOpenScanner)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -200,7 +200,7 @@ struct ScanToUseAppView: View {
             matching: .images,
             photoLibrary: .shared()
         ) {
-            Text(LocalizedStringResource("scan_enter_open_photo_scanner"))
+            Text(.scanEnterOpenPhotoScanner)
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
