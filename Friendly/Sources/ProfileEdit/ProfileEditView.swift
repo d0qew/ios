@@ -24,6 +24,7 @@ struct ProfileEditView: View {
     }
 
     var body: some View {
+        @Bindable var viewModel = viewModel
         NavigationView {
             ScrollView {
                 AvatarPicker(viewModel: viewModel)
@@ -32,11 +33,12 @@ struct ProfileEditView: View {
                     description: $viewModel.description,
                     socialLink: $viewModel.socialLink,
                 )
+                emailSectionView
                 Interests(viewModel: viewModel)
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("profile_edit")
+                    Text(.profileEdit)
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button(action: { viewModel.dismiss() }) {
@@ -52,29 +54,105 @@ struct ProfileEditView: View {
                     .padding(.vertical, 12)
             }
             .alert(
-                "sign_up_error",
+                String(localized: .signUpError),
                 isPresented: .constant(viewModel.error != nil),
             ) {
-                Button("sign_up_error_ok") {
+                Button(String(localized: .signUpErrorOk)) {
                     viewModel.clearError()
                 }
                 .keyboardShortcut(.defaultAction)
             } message: {
                 if let error = viewModel.error {
-                    let string: LocalizedStringKey = switch error {
-                    case .required: "sign_up_required_fields"
-                    case .nicknameMaxLength: "sign_up_nickname_max_length"
-                    case .descriptionMaxLength: "sign_up_description_max_length"
-                    case .socialLinkMaxLength: "sign_up_social_link_max_length"
-                    case .socialLinkNotUrl: "sign_up_social_link_not_url"
-                    case .ioError: "sign_up_io_error"
+                    let resource: LocalizedStringResource = switch error {
+                    case .required: .signUpRequiredFields
+                    case .nicknameMaxLength: .signUpNicknameMaxLength
+                    case .descriptionMaxLength: .signUpDescriptionMaxLength
+                    case .socialLinkMaxLength: .signUpSocialLinkMaxLength
+                    case .socialLinkNotUrl: .signUpSocialLinkNotUrl
+                    case .ioError: .signUpIoError
                     }
-                    Text(string)
+                    Text(resource)
                 }
             }
         }
         .onDisappear {
             viewModel.cancelTasks()
+        }
+    }
+
+    @ViewBuilder
+    private var emailSectionView: some View {
+        if let email = viewModel.email {
+            EmailInfoView(
+                email: email,
+                isUnlinking: viewModel.isUnlinkingEmail,
+                onUnlink: viewModel.unlinkEmail,
+            )
+            .padding(.horizontal)
+        } else {
+            AuthBindingsNavigationButton { email in
+                viewModel.emailLinked(email)
+                viewModel.dismiss()
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+private struct EmailInfoView: View {
+    let email: String
+    let isUnlinking: Bool
+    let onUnlink: () -> Void
+
+    @State private var showUnlinkConfirmation = false
+
+    var body: some View {
+        HStack {
+            emailLabelsView
+            Spacer()
+            unlinkButton
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.top, 8)
+        .confirmationDialog(
+            String(localized: .profileEditUnlinkEmailConfirmation),
+            isPresented: $showUnlinkConfirmation,
+            titleVisibility: .visible,
+        ) {
+            Button(
+                String(localized: .profileEditUnlinkEmailConfirm),
+                role: .destructive,
+                action: onUnlink,
+            )
+        }
+    }
+
+    private var emailLabelsView: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(.profileEditEmailTitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(email)
+                .font(.body)
+        }
+    }
+
+    @ViewBuilder
+    private var unlinkButton: some View {
+        if isUnlinking {
+            ProgressView()
+        } else {
+            Button(role: .destructive) {
+                showUnlinkConfirmation = true
+            } label: {
+                Image(systemName: "link.badge.minus")
+            }
+            .accessibilityLabel(
+                String(localized: .profileEditUnlinkEmailButton)
+            )
         }
     }
 }
@@ -84,8 +162,6 @@ private struct AvatarPicker: View {
 
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var selectedImageData: Data? = nil
-
-    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -107,19 +183,12 @@ private struct AvatarPicker: View {
                         }
                     }
             } else {
-                let opacity = colorScheme == .light ? 0.5 : 1
-                Image(systemName: "person.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 150, height: 150)
-                    .background(.white)
-                    .foregroundStyle(.gray.gradient.opacity(opacity))
-                    .clipShape(Circle())
+                AvatarView(url: viewModel.profileInfo.avatarUrl, size: 150)
                     .glassEffect()
             }
 
             PhotosPicker(selection: $selectedItem, matching: .images) {
-                Text("sign_up_upload")
+                Text(.signUpUpload)
                     .padding(.vertical, 5)
                     .padding(.horizontal, 20)
             }
@@ -160,7 +229,10 @@ private struct Inputs: View {
                 Image(systemName: "person")
                     .foregroundColor(.secondary)
 
-                TextField("sign_up_nickname", text: $nickname)
+                TextField(
+                    String(localized: .signUpNickname),
+                    text: $nickname
+                )
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
@@ -172,7 +244,7 @@ private struct Inputs: View {
                 Image(systemName: "paperplane")
                     .foregroundColor(.secondary)
                 TextField(
-                    "sign_up_social_link",
+                    String(localized: .signUpSocialLink),
                     text: $socialLink,
                     axis: .vertical,
                 )
@@ -188,7 +260,7 @@ private struct Inputs: View {
                 Image(systemName: "bubble")
                     .foregroundColor(.secondary)
                 TextField(
-                    "sign_up_description",
+                    String(localized: .signUpDescription),
                     text: $description,
                     axis: .vertical,
                 )
@@ -228,7 +300,7 @@ private struct SaveButton: View {
         @Bindable var viewModel = viewModel
         Button(action: { viewModel.clicksave() }) {
             ZStack {
-                Text("profile_edit_button_save")
+                Text(.profileEditButtonSave)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -241,5 +313,25 @@ private struct SaveButton: View {
         }
         .buttonStyle(.glassProminent)
         .disabled(viewModel.saveButtonDisabled)
+    }
+}
+
+private struct AuthBindingsNavigationButton: View {
+    let onEmailLinked: (String) -> Void
+
+    var body: some View {
+        NavigationLink {
+            AuthBindingsView(onEmailLinked: onEmailLinked)
+        } label: {
+            HStack {
+                Image(systemName: "envelope")
+                Text(.profileEditAuthBindingsButton)
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(.glass)
+        .padding(.top, 8)
     }
 }

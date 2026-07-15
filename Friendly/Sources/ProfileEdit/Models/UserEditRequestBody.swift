@@ -12,7 +12,7 @@ struct UserEditRequestBody: Encodable {
     let description: Value<String>
     let interests: Value<[String]>
     let socialLink: Value<String?>
-    let avatar: Value<FileDescriptorSerializable?>
+    let avatar: Value<FileDescriptorSerializable?>?
 
     enum CodingKeys: String, CodingKey {
         case nickname
@@ -38,7 +38,7 @@ extension UserEditRequestBody {
         self.nickname = .init(value: nickname)
         self.description = .init(value: description)
         self.interests = .init(value: interests)
-        self.avatar = .init(value: avatar)
+        self.avatar = avatar.map { .init(value: Optional($0)) }
         self.socialLink = .init(value: socialLink)
     }
 }

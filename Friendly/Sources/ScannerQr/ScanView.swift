@@ -11,27 +11,27 @@ import PhotosUI
 struct ScanToUseAppView: View {
     @StateObject private var viewModel: ScanToUseAppViewModel
     @State private var pickedPhotoItem: PhotosPickerItem? = nil
-    private var isBlocked: Bool
-
     @FocusState private var isLinkTextFieldFocused: Bool
+    private var isBlocked: Bool
+    private let onEmailLogin: (() -> Void)?
+    
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
 
     init(
         isBlocked: Bool,
+        onEmailLogin: (() -> Void)? = nil,
         onSuccess: @escaping () -> Void
     ) {
         self.isBlocked = isBlocked
+        self.onEmailLogin = onEmailLogin
         _viewModel = StateObject(wrappedValue: ScanToUseAppViewModel(onSuccess: onSuccess))
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                switch viewModel.state {
-                case .idle: content
-                case .loading: LoadingView()
-                }
+                stateView
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -45,11 +45,13 @@ struct ScanToUseAppView: View {
                     get: { viewModel.alert != nil },
                     set: { if !$0 { viewModel.alert = nil } },
                 ),
-                actions: {
+                actions: { 
                     Button(
-                        .scanEnterErrorAlertButtonOkay,
+                        String(localized: .scanEnterErrorAlertButtonOkay),
                         role: .cancel,
-                    ) { viewModel.resetState() }
+                    ) {
+                        viewModel.resetState()
+                    }
                 },
                 message: {
                     if let message = viewModel.alert?.message {
@@ -82,28 +84,31 @@ struct ScanToUseAppView: View {
         }
     }
 
-    private var content: some View {
-        ScrollView {
+    @ViewBuilder
+    private var stateView: some View {
+        switch viewModel.state {
+        case .idle:
+            contentView
+        case .loading:
+            LoadingView()
+        }
+    }
+
+    private var contentView: some View {
+        ScrollView { 
             VStack(spacing: 20) {
                 qrCodeImage
                     .padding(.bottom, 8)
 
-                infoTitle
-                    .padding(.horizontal, 16)
-
-                infoSubtitle
-                    .padding(.horizontal, 16)
+                titleLabel
+                subtitleLabel
 
                 Spacer(minLength: 40)
 
                 inviteLinkTextField
-                    .padding(.horizontal)
-
+                emailLoginSectionView
                 openScannerButton
-                    .padding(.horizontal)
-
-                photosPicker
-                    .padding(.horizontal)
+                photoPickerButton
 
                 Spacer(minLength: 24)
             }
@@ -116,34 +121,24 @@ struct ScanToUseAppView: View {
         .padding(.top)
     }
 
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            Text(.scannerQrcodeNavigationTitle)
-        }
-        ToolbarItem(placement: .primaryAction) {
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-            }
-        }
-    }
-
     private var qrCodeImage: some View {
         Image(systemName: "qrcode.viewfinder")
             .font(.system(size: 56))
     }
 
-    private var infoTitle: some View {
+    private var titleLabel: some View {
         Text(.scanEnterInfoTitle)
             .font(.title3)
             .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
     }
 
-    private var infoSubtitle: some View {
+    private var subtitleLabel: some View {
         Text(.scanEnterInfoSubtitle)
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
     }
 
     private var inviteLinkTextField: some View {
@@ -178,23 +173,45 @@ struct ScanToUseAppView: View {
         }
         .padding()
         .background(.regularMaterial, in: .rect(cornerRadius: 14))
+        .padding(.horizontal)
     }
 
-    private var openScannerButton: some View {
-        Button(
-            action: { viewModel.openScanner() },
-            label: {
-                Text(.scanEnterOpenScanner)
+    @ViewBuilder
+    private var emailLoginSectionView: some View {
+        if isBlocked, let onEmailLogin {
+            Text(.scanEnterBlockedEmailDescription)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 16)
+            NavigationLink {
+                EmailLoginView(onSuccess: onEmailLogin)
+            } label: {
+                Text(.scanEnterBlockedEmailLoginButton)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
-            },
-        )
-        .keyboardShortcut(.defaultAction)
-        .buttonStyle(.glassProminent)
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.horizontal)
+        }
     }
 
-    private var photosPicker: some View {
+    private var openScannerButton: some View {
+        Button {
+            viewModel.openScanner()
+        } label: {
+            Text(.scanEnterOpenScanner)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+        }
+        .keyboardShortcut(.defaultAction)
+        .buttonStyle(.glassProminent)
+        .padding(.horizontal)
+    }
+
+    private var photoPickerButton: some View {
         PhotosPicker(
             selection: $pickedPhotoItem,
             matching: .images,
@@ -206,6 +223,19 @@ struct ScanToUseAppView: View {
                 .padding()
         }
         .buttonStyle(.glass)
+        .padding(.horizontal)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            Text(.scannerQrcodeNavigationTitle)
+        }
+        ToolbarItem(placement: .primaryAction) {
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
+            }
+        }
     }
 }
 

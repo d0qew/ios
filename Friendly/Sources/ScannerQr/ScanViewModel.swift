@@ -24,15 +24,14 @@ final class ScanToUseAppViewModel: ObservableObject {
         case qr
         case textField
     }
-
+    
     @Published var state: State = .idle
     @Published var isScannerPresented = false
     @Published var alert: Alert?
     @Published var inviteLinkText = ""
 
     private let onSuccess: () -> Void
-    private let storage: Storage = .shared
-    private let networkClient: NetworkClient = .meetacy
+    private let addFriendService: AddFriendService = .shared
 
     init(onSuccess: @escaping () -> Void) {
         self.onSuccess = onSuccess
@@ -84,12 +83,7 @@ final class ScanToUseAppViewModel: ObservableObject {
         state = .loading
         Task {
             do {
-                let authorization = try storage.loadAuthorization()
-                try await networkClient.friendsAdd(
-                   authorization: authorization,
-                   token: friend.token,
-                   id: friend.id
-               )
+                try await addFriendService.add(friend)
                 onSuccess()
             } catch {
                 alert = .unknownError
